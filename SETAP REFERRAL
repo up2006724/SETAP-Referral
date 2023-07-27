@@ -1,0 +1,263 @@
+import tkinter as tk
+from tkinter import simpledialog, messagebox
+
+
+class Book:
+    def __init__(lib, title, author, total_copies):
+        lib.title = title
+        lib.author = author
+        lib.total_copies = total_copies
+        lib.available_copies = total_copies
+        lib.reserved_copies = 0
+
+
+class Library:
+    def __init__(lib):
+        lib.books = [
+            Book("Hello Beautiful", "Ann Napolitano", 3),
+            Book("All the Sinners Bleed", "S.A. Cosby", 2),
+            Book("Generations: The Real Differences Between Gen Z, Millennials, Gen X, Boomers, and Silents―and What They Mean for America's Future", "Jean M. Twenge, Ph.D.", 5),
+            Book("Weyward", "Emilia Hart", 1),
+            Book("You Have to Be Prepared to Die Before You Can Begin to Live: Ten Weeks in Birmingham That Changed America", "Paul Kix", 4),
+            Book("Pomegranate", "Helen Elaine Lee", 3),
+            Book("Age of Vice", "Deepti Kapoor", 2),
+            Book("The Wager: A Tale of Shipwreck, Mutiny, and Murder", "David Grann", 2),
+            Book("The Covenant of Water", "Abraham Verghese", 3),
+            Book("Happy Place", "Emily Henry", 1),
+            Book("King: A Life", "Jonathan Eig", 5),
+            Book("Lady Tan's Circle of Women", "Lisa See", 3),
+            Book("Small Mercies", "Dennis Lehane", 2),
+            Book("Hang the Moon", "Jeannette Walls", 1),
+            Book("Symphony of Secrets", "Brendan Slocumb", 2),
+            Book("Warrior Girl Unearthed", "Angeline Boulley", 4),
+            Book("The Great Reclamation", "Rachel Heng", 3),
+            Book("Poverty, by America", "Matthew Desmond", 5),
+            Book("Yellowface", "R.F. Kuang", 2),
+            Book("Romantic Comedy", "Curtis Sittenfeld", 1),
+            Book("Hello Beautiful", "Ann Napolitano", 1),
+            Book("All the Sinners Bleed", "S.A. Cosby", 3),
+            Book("Generations: The Real Differences Between Gen Z, Millennials, Gen X, Boomers, and Silents―and What They Mean for America's Future", "Jean M. Twenge, Ph.D.", 2),
+            Book("Weyward", "Emilia Hart", 5),
+            Book("You Have to Be Prepared to Die Before You Can Begin to Live: Ten Weeks in Birmingham That Changed America", "Paul Kix", 3),
+            Book("Pomegranate", "Helen Elaine Lee", 4),
+            Book("Age of Vice", "Deepti Kapoor", 1),
+            Book("The Wager: A Tale of Shipwreck, Mutiny, and Murder", "David Grann", 2),
+            Book("The Covenant of Water", "Abraham Verghese", 2),
+            Book("Happy Place", "Emily Henry", 3),
+            Book("King: A Life", "Jonathan Eig", 4),
+            Book("Lady Tan's Circle of Women", "Lisa See", 5),
+            Book("Small Mercies", "Dennis Lehane", 1),
+            Book("Hang the Moon", "Jeannette Walls", 2),
+            Book("Symphony of Secrets", "Brendan Slocumb", 3),
+            Book("Warrior Girl Unearthed", "Angeline Boulley", 2),
+            Book("The Great Reclamation", "Rachel Heng", 1),
+            Book("Poverty, by America", "Matthew Desmond", 4),
+            Book("Yellowface", "R.F. Kuang", 3),
+            Book("Romantic Comedy", "Curtis Sittenfeld", 2)
+        ]
+        lib.reserved_books = []
+
+    def add_book(lib, book):
+        lib.books.append(book)
+
+    def search_books(lib, keyword):
+        results = []
+        for book in lib.books:
+            if keyword.lower() in book.title.lower() or keyword.lower() in book.author.lower():
+                results.append(book)
+        return results
+
+    def checkout_book(lib, book):
+        if book in lib.books:
+            if book.available_copies > 0:
+                book.available_copies -= 1
+                return True
+            else:
+                messagebox.showinfo("Sorry, there's no copies available, you can reserve one.")
+        else:
+            messagebox.showinfo("Book not found.")
+        return False
+
+    def reserve_book(lib, book):
+        if book in lib.books:
+            if book.available_copies > 0:
+                messagebox.showinfo("There's books to checkout, you can't reserve it at the moment.")
+            elif book.reserved_copies >= book.total_copies:
+                messagebox.showinfo("Sorry, no reservations left, you have been added to the queue.")
+            else:
+                book.reserved_copies += 1
+                lib.reserved_books.append(book)
+                messagebox.showinfo("Success!", f"You have successfully reserved '{book.title}'.")
+        else:
+            messagebox.showinfo("Error!", "We do not have this book!.")
+
+
+
+root = tk.Tk()
+root.title("Library Portal App")
+
+registered_users = {"admin": "password"}  
+logged_in = False
+
+
+library = Library()
+
+def login():
+    global logged_in
+    username = login_entry.get()
+    password = password_entry.get()
+
+    if username in registered_users and registered_users[username] == password:
+        logged_in = True
+        messagebox.showinfo("You are logged in!")
+    else:
+        messagebox.showinfo("Login Error", "Your username or password is incorrect, Please try again.")
+
+def register():
+    username = login_entry.get()
+    password = password_entry.get()
+
+    if username and password:
+        registered_users[username] = password
+        messagebox.showinfo("Success, you are now registered, please now login.")
+    else:
+        messagebox.showinfo("Registration Error", "Please enter a valid username and password.")
+
+def search_books():
+    if not logged_in:
+        messagebox.showinfo("Login Required", "Please log in to search for books.")
+        return
+
+    keyword = search_entry.get()
+    results = library.search_books(keyword)
+    result_listbox.delete(0, tk.END)
+
+    if results:
+        for book in results:
+            result_listbox.insert(tk.END, f"{book.title} by {book.author}")
+    else:
+        result_listbox.insert(tk.END, "No results can be found.")
+
+def checkout_book():
+    if not logged_in:
+        messagebox.showinfo("Please log in to check out a book.")
+        return
+
+    selected_indices = result_listbox.curselection()
+    if not selected_indices:
+        messagebox.showinfo("Please select a book from the search results.")
+        return
+
+    selected_index = selected_indices[0]
+    selected_book = result_listbox.get(selected_index)
+    selected_title = selected_book.split(" by ")[0]
+
+    for book in library.books:
+        if book.title.lower() == selected_title.lower():
+            if library.checkout_book(book):
+                result_listbox.delete(selected_index)
+                messagebox.showinfo(f"Successfully checked out '{book.title}'.")
+                return
+            break
+    else:
+        messagebox.showinfo("Book not found in the library.")
+
+def reserve_book():
+    if not logged_in:
+        messagebox.showinfo("Please log in to reserve a book.")
+        return
+
+    selected_indices = result_listbox.curselection()
+    if not selected_indices:
+        messagebox.showinfo("Please select a book from the search results.")
+        return
+
+    selected_index = selected_indices[0]
+    selected_book = result_listbox.get(selected_index)
+    selected_title = selected_book.split(" by ")[0]
+
+    for book in library.books:
+        if book.title.lower() == selected_title.lower():
+            library.reserve_book(book)
+            return
+    else:
+        messagebox.showinfo("Book not found in the library.")
+
+def change_password():
+    if not logged_in:
+        messagebox.showinfo("Please log in to change your password.")
+        return
+
+    old_password = registered_users.get(login_entry.get())
+    if old_password is None:
+        messagebox.showinfo("Could not find this user, please try again.")
+        return
+
+    current_password = simpledialog.askstring("Current Password", "Enter your current password:", show="*")
+    if current_password != old_password:
+        messagebox.showinfo("Password Change Error", "Incorrect current password. Please try again.")
+        return
+
+    new_password = simpledialog.askstring("Enter your new password:", show="*")
+    if new_password:
+        registered_users[login_entry.get()] = new_password
+        messagebox.showinfo("Password has been changed successfully!")
+    else:
+        messagebox.showinfo("Please enter a valid new password.")
+
+login_label = tk.Label(root, text="Username:")
+login_label.pack()
+
+login_entry = tk.Entry(root, width=40)
+login_entry.pack()
+
+password_label = tk.Label(root, text="Password:")
+password_label.pack()
+
+password_entry = tk.Entry(root, show="*", width=40)
+password_entry.pack()
+
+login_button = tk.Button(root, text="Log In", command=login)
+login_button.pack()
+
+register_button = tk.Button(root, text="Register", command=register)
+register_button.pack()
+
+
+search_label = tk.Label(root, text="Search Books:")
+search_label.pack()
+
+search_entry = tk.Entry(root, width=40)
+search_entry.pack()
+
+search_button = tk.Button(root, text="Search", command=search_books)
+search_button.pack()
+
+
+result_label = tk.Label(root, text="Search Results:")
+result_label.pack()
+
+
+scrollbar = tk.Scrollbar(root)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+result_listbox = tk.Listbox(root, width=50, height=10, yscrollcommand=scrollbar.set)
+result_listbox.pack()
+
+
+scrollbar.config(command=result_listbox.yview)
+
+
+checkout_button = tk.Button(root, text="Checkout Selected Book", command=checkout_book)
+checkout_button.pack()
+
+reserve_button = tk.Button(root, text="Reserve Selected Book", command=reserve_book)
+reserve_button.pack()
+
+
+change_password_button = tk.Button(root, text="Change Password", command=change_password)
+change_password_button.pack()
+
+root.mainloop()
+
+
